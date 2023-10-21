@@ -3,7 +3,7 @@
 section .data
 	; Constants go here
 	; The string that I can print
-	hello_world: db "Are you okay?"
+	hello_world: db "Hello, standard output!"
 	hello_world_len: equ $-hello_world     ; Length of hello world
 	newline: db 10                         ; Newline character
 	newline_len: equ $-newline             ; Length of the newline
@@ -14,14 +14,14 @@ section .data
 
 
 	; Syscalls
-	sys_read: equ 0x00
-	sys_write: equ 0x01
+	sys_read: equ 0x00   ; I literally don't know what this does
+	sys_write: equ 0x01  ; Writes to something, write to std_out to write to cout and std_err to write to cerr
 
 	sys_exit: equ 0x3c
 
 	; Other things
-	std_out: equ 0x1
-	std_err: equ 0x2
+	std_out: equ 0x1 ; standard output
+	std_err: equ 0x2 ; error output
 
 section .bss
 	; Variables go here
@@ -29,7 +29,7 @@ section .bss
 section .text
 	global _start
 
-    _start:
+_start:
 
 	; Print out Hello, World!
 	mov rax, sys_write             ; System Write
@@ -50,7 +50,7 @@ section .text
 	mov rdi, std_err
 	mov rsi, std_err_message
 	mov rdx, std_err_len
-	;syscall
+	syscall
 	
 
 	; End the program
