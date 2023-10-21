@@ -2,7 +2,7 @@ section .bss
 	; Variables go here
 
 section .data
-	hello_world: db "I know the password to the digipensteamkiosk Steam account!", 10    ; Hello world to print
+	hello_world: db "Hello, World!", 10    ; Hello world to print
 	hello_world_len: equ $-hello_world     ; Length of hello world
 	; Constants
 
