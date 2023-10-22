@@ -12,8 +12,14 @@ section .data
 	std_err_message: db "This is going to stderr!", 0x0a
 	std_err_len: equ $-std_err_message
 
-	userin_msg: db "You did not put a V in?", 0x0a
+	userin_msg: db "You did not put a v in?", 0x0a
 	userin_msg_len: equ $-userin_msg
+
+	msg_got_v: db "Thank you!", 0xa
+	msg_got_v_len: equ $-msg_got_v
+
+	msg_v_tell: db "Please enter a 'v' in.", 0x0a, "> "
+	msg_v_tell_len: equ $-msg_v_tell
 
 
 
@@ -35,7 +41,7 @@ section .bss
 section .text
 	global _start
 
-_start:
+_start_old:
 
 	; Print out Hello, World!
 	mov rax, sys_write             ; System Write
@@ -58,38 +64,57 @@ _start:
 	mov rdx, std_err_len
 	syscall
 
+	; Print out a few newlines
+	mov rax, sys_write
+	mov rdi, std_io
+	mov rsi, newline
+	mov rdx, newline_len
+	syscall
+	syscall                       ; I know I can do this, but most of the time I don't just so I can have more practice with mov
+	
+_start:
+
+
+	; Print out the enter a v message.
+
+	mov rsi, msg_v_tell
+	mov rdx, msg_v_tell_len
+	call print
 
 
 	; Attempt to read something from cin
-
-	mov rax, sys_read              ; Tell the system I want to read something
-	mov rdi, std_io                ; does std_out work? Idk.
 	mov rsi, userin                ; Where to put this in.
-	mov rdx, userin_size           ; The size of where to put this
-	syscall
+	mov rdx, userin_size
+	call getin
+
 
 	; Attempt to write that to the screen
-	mov rax, sys_write
-	mov rdi, std_io
 	mov rsi, userin,
 	mov rdx, 1                     ; Only take the first character
-	; syscall ; Don't write anything rn
+	; call print
 
 
 	; Check to see if the first character is a 'v'
 	mov r9, "v"
 	movzx r8, byte [userin]
 	cmp r8, r9
-	je skip
-	
-	; Write something to the screen if it was not a v
-	mov rax, sys_write
-	mov rdi, std_io
+
+	je printgotv 
+
 	mov rsi, userin_msg
 	mov rdx, userin_msg_len
-	syscall
 
-skip:
+	jmp end
+
+printgotv:
+
+	mov rsi, msg_got_v
+	mov rdx, msg_got_v_len
+
+end:
+
+	call print ; print out that thingie
+
 	; End the program
 	mov rax, sys_exit              ; sys_exit
 	mov rdi, 0                     ; Basically return what's in rdi
@@ -97,5 +122,27 @@ skip:
 
 
 
+
+
+
+print:  ; assumes that rsi and rdx are set already
+	mov rdi, std_io
+
+print_noset:
+	mov rax, sys_write
+	syscall
+	ret
+
+
+pusherr:
+	mov rdi, std_err
+	call print_noset
+	ret
+
+getin:
+	mov rdi, std_io
+	mov rax, sys_read
+	syscall
+	ret
 
 
