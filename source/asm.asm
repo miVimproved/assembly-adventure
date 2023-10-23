@@ -41,18 +41,17 @@ _start:
 
 	; Move the correct "got" message in
 	mov rsi, msg_got_v
+
+	; TODO: find a way to make this one line
 	mov r9, msg_not_v
 	cmovnz rsi, r9
 	
-
 	call print ; print out that thingie
 
 	; End the program
 	mov rax, sys_exit              ; sys_exit
 	mov rdi, 0                     ; Basically return what's in rdi
 	syscall                        ; Kernal call
-
-
 
 
 
