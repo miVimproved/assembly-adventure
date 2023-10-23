@@ -95,23 +95,18 @@ _start:
 
 
 	; Check to see if the first character is a 'v'
-	mov r9, "v"
 	movzx r8, byte [userin]
-	cmp r8, r9
-
-	je printgotv 
-
-	mov rsi, userin_msg
-	mov rdx, userin_msg_len
-
-	jmp end
-
-printgotv:
-
-	mov rsi, msg_got_v
-	mov rdx, msg_got_v_len
-
-end:
+	cmp r8, "v"
+	
+	mov r9, userin_msg
+	mov r10, userin_msg_len
+	cmovnz rsi, r9
+	cmovnz rdx, r10
+	
+	mov r9, msg_got_v
+	mov r10, msg_got_v_len
+	cmovz rsi, r9
+	cmovz rdx, r10
 
 	call print ; print out that thingie
 
