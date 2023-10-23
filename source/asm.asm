@@ -3,22 +3,22 @@
 section .data
 	; Constants go here
 	; The string that I can print
-	hello_world: db "Hello, standard output!"
+	hello_world: db "Hello, standard output!", 0x00
 	hello_world_len: equ $-hello_world     ; Length of hello world
 
-	newline: db 0x0a                       ; Newline character
+	newline: db 0x0a, 0x00                 ; Newline character
 	newline_len: equ $-newline             ; Length of the newline
                                                ; Gotten using the amount of data since that.
-	std_err_message: db "This is going to stderr!", 0x0a
+	std_err_message: db "This is going to stderr!", 0x0a, 0x00
 	std_err_len: equ $-std_err_message
 
-	userin_msg: db "You did not put a v in?", 0x0a
+	userin_msg: db "You did not put a v in?", 0x0a, 0x00
 	userin_msg_len: equ $-userin_msg
 
-	msg_got_v: db "Thank you!", 0xa
+	msg_got_v: db "Thank you!", 0xa, 0x00
 	msg_got_v_len: equ $-msg_got_v
 
-	msg_v_tell: db "Please enter a 'v' in.", 0x0a, "> "
+	msg_v_tell: db "Please enter a 'v' in.", 0x0a, "> ", 0x00
 	msg_v_tell_len: equ $-msg_v_tell
 
 
@@ -78,13 +78,11 @@ _start:
 	; Print out the enter a v message.
 
 	mov rsi, msg_v_tell
-	mov rdx, msg_v_tell_len
 	call print
 
 
 	; Attempt to read something from cin
 	mov rsi, userin                ; Where to put this in.
-	mov rdx, userin_size
 	call getin
 
 
@@ -99,14 +97,10 @@ _start:
 	cmp r8, "v"
 	
 	mov r9, userin_msg
-	mov r10, userin_msg_len
 	cmovnz rsi, r9
-	cmovnz rdx, r10
 	
 	mov r9, msg_got_v
-	mov r10, msg_got_v_len
 	cmovz rsi, r9
-	cmovz rdx, r10
 
 	call print ; print out that thingie
 
@@ -124,6 +118,8 @@ print:  ; assumes that rsi and rdx are set already
 	mov rdi, std_io
 
 print_noset:
+	call strlen
+	mov rdx, rax
 	mov rax, sys_write
 	syscall
 	ret
@@ -140,4 +136,25 @@ getin:
 	syscall
 	ret
 
+strlen: ; Input string is in rsi, return value is in rax
+	push r15
+	push r14
 
+	mov rax, 0  ; Clear rax
+	mov r14, rsi ; Load the string address into r14 
+
+strlen__loop:
+	; Add to the string length
+	add rax, 1
+
+	; Load the next character into r15
+	add r14, 1 ; size of a character
+	movzx r15, byte [r14]
+
+	cmp r15, 0x00 ; Check r15 with the null character
+	jne strlen__loop ; Jump back to there if it's not a zero
+
+	pop r15
+	pop r14
+
+	ret

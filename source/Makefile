@@ -10,3 +10,7 @@ keep:
 
 clean:
 	@rm -f asm.o a.out
+
+debug:
+	@./shmakefile.sh
+	@gdb ./a.out
