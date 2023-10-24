@@ -1,13 +1,15 @@
 ; Vim's Assembly Shenanigans!
 
 section .data ; Constants go here
+	; Helpful strings
+	help_newline: db 0x0a, 0x00
+	help_clear_screen: db `\033[2J\033[H`, 0x00
+
 	; Strings in "Enter a v"
 	msg_ask_for_v: db "Please enter a 'v'.", 0x0a, "> ", 0x00
-	msg_not_v: db "You did not put a v in?", 0x0a, 0x00
-	msg_got_v: db "Thank you!", 0xa, 0x00
-
-
-	help_clear_screen: db `\033[2J\033[H`, 0x00
+	msg_not_v: db "...", 0x00
+	msg_got_v: db "Congratulations! YOU WIN!", 0x00
+	msg_tysm: db "Thank you a so much for to playing a my game!", 0x00
 
 	; Syscalls
 	sys_read: equ 0x00   ; I literally don't know what this does
@@ -29,10 +31,26 @@ section .text ; Code goes here
 
 ; Macros defined here
 
+; puts_newline - Puts a newline
+%macro puts_newline 0
+	mov rsi, help_newline
+	call print
+%endmacro
+
+; putsl - Put Screen with a Line
+%macro putsl 1
+	mov rsi, %1
+	call print
+	mov rsi, help_newline
+	call print
+%endmacro
+
+; puts - Put Screen
 %macro puts 1
 	mov rsi, %1
 	call print
 %endmacro
+
 
 %macro cin 2
 	mov rsi, $1
@@ -81,6 +99,12 @@ _start:
 	cmovnz rsi, r9
 
 	call print ; print out that thingie
+
+	%rep 2
+	puts_newline
+	%endrep
+
+	putsl msg_tysm
 
 	; End the program
 	mov rax, sys_exit              ; sys_exit
