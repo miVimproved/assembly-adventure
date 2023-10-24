@@ -2,10 +2,12 @@
 
 section .data ; Constants go here
 	; Strings in "Enter a v"
-	msg_ask_for_v: db "Please enter a 'v' in.", 0x0a, "> ", 0x00
+	msg_ask_for_v: db "Please enter a 'v'.", 0x0a, "> ", 0x00
 	msg_not_v: db "You did not put a v in?", 0x0a, 0x00
 	msg_got_v: db "Thank you!", 0xa, 0x00
 
+
+	help_clear_screen: db `\033[2J\033[H`, 0x00
 
 	; Syscalls
 	sys_read: equ 0x00   ; I literally don't know what this does
@@ -24,14 +26,46 @@ section .bss ; Variables go here
 section .text ; Code goes here
 	global _start
 
+
+; Macros defined here
+
+%macro puts 1
+	mov rsi, %1
+	call print
+%endmacro
+
+%macro cin 2
+	mov rsi, $1
+	mov rdi, $2
+	call getin
+%endmacro
+
+
+%macro mpush 1-*
+	%rep %0
+		push %1
+	%rotate 1
+	%endrep
+%endmacro
+
+%macro mpop 1-*
+	%rep %0
+	%rotate -1
+		pop %1
+	%endrep
+%endmacro
+
 _start:
 
+	; Doesn't work yet, I don't know why
+	puts help_clear_screen
+
 	; Print out the enter a v message.
-	mov rsi, msg_ask_for_v
-	call print
+	puts msg_ask_for_v
 
 	; Attempt to read something from cin
-	mov rsi, userin                ; Where to put this in.
+	;cin userin, userin_len
+	mov rsi, userin
 	mov rdi, userin_len
 	call getin
 
@@ -42,18 +76,16 @@ _start:
 	; Move the correct "got" message in
 	mov rsi, msg_got_v
 
-	; TODO: find a way to make this one line
+	; I have to do this R.I.P
 	mov r9, msg_not_v
 	cmovnz rsi, r9
-	
+
 	call print ; print out that thingie
 
 	; End the program
 	mov rax, sys_exit              ; sys_exit
 	mov rdi, 0                     ; Basically return what's in rdi
 	syscall                        ; Kernal call
-
-
 
 
 print:  ; assumes that rsi and rdx are set already
@@ -79,8 +111,7 @@ getin:
 	ret
 
 strlen: ; Input string is in rsi, return value is in rax
-	push r15
-	push r14
+	mpush r14, r15
 
 	mov rax, 0  ; Clear rax
 	mov r14, rsi ; Load the string address into r14 
@@ -96,7 +127,6 @@ strlen__loop:
 	cmp r15, 0x00 ; Check r15 with the null character
 	jne strlen__loop ; Jump back to there if it's not a zero
 
-	pop r15
-	pop r14
+	mpop r14, r15
 
 	ret
