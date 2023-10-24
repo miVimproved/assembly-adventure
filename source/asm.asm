@@ -41,14 +41,14 @@ section .text ; Code goes here
 %endmacro
 
 
-%macro mpush 1-*
+%macro push 2-*
 	%rep %0
 		push %1
 	%rotate 1
 	%endrep
 %endmacro
 
-%macro mpop 1-*
+%macro pop 2-*
 	%rep %0
 	%rotate -1
 		pop %1
@@ -111,7 +111,7 @@ getin:
 	ret
 
 strlen: ; Input string is in rsi, return value is in rax
-	mpush r14, r15
+	push r14, r15
 
 	mov rax, 0  ; Clear rax
 	mov r14, rsi ; Load the string address into r14 
@@ -127,6 +127,6 @@ strlen__loop:
 	cmp r15, 0x00 ; Check r15 with the null character
 	jne strlen__loop ; Jump back to there if it's not a zero
 
-	mpop r14, r15
+	pop r14, r15
 
 	ret
