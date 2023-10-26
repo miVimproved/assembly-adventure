@@ -3,13 +3,15 @@
 section .data ; Constants go here
 	; Helpful strings
 	help_newline: db 0x0a, 0x00
-	help_clear_screen: db `\033[2J\033[H`, 0x00
+	help_clear_screen: db `\033[2J\033[H`, 0x00 ; Lowercase J and Lowercase H is the funni
 
 	; Strings in "Enter a v"
-	msg_ask_for_v: db "Please enter a 'v'.", 0x0a, "> ", 0x00
-	msg_not_v: db "...", 0x00
+	msg_ask_for_v: db "Welcome to 1 letter Hangman!", 0x0a, "Please enter a 'v'.", 0x0a, "> ", 0x00
+	msg_not_v: db "The blood is on your hands.", 0x00
 	msg_got_v: db "Congratulations! YOU WIN!", 0x00
-	msg_tysm: db "Thank you a so much for to playing a my game!", 0x00
+	msg_tayasmfatpamg: db "Thank a you a so much for a to playing a my game!", 0x00
+	
+
 
 	; Syscalls
 	sys_read: equ 0x00   ; I literally don't know what this does
@@ -18,11 +20,15 @@ section .data ; Constants go here
 	sys_exit: equ 0x3c
 
 	; Other things
-	std_io: equ 0x1 ; standard output
+	std_io: equ 0x1 ; standard io
 	std_err: equ 0x2 ; error output
 
 section .bss ; Variables go here
-	userin: resb 100               ; User input array
+	; Temporary buffer to do things with
+	temp_buffer: resb 64
+	temp_buffer_len: equ $-temp_buffer
+
+	userin: resb 1                ; User input array
 	userin_len: equ $-userin      ; User input array size
 
 section .text ; Code goes here
@@ -51,14 +57,15 @@ section .text ; Code goes here
 	call print
 %endmacro
 
-
+; cin - Gets user input and then flushes the input buffer
 %macro cin 2
+	; Get the user input
 	mov rsi, $1
-	mov rdi, $2
+	mov rdx, $2
 	call getin
 %endmacro
 
-
+; push - pushes to stack
 %macro push 2-*
 	%rep %0
 		push %1
@@ -66,6 +73,7 @@ section .text ; Code goes here
 	%endrep
 %endmacro
 
+; pop - pops from stack
 %macro pop 2-*
 	%rep %0
 	%rotate -1
@@ -84,8 +92,10 @@ _start:
 	; Attempt to read something from cin
 	;cin userin, userin_len
 	mov rsi, userin
-	mov rdi, userin_len
+	mov rdx, userin_len
 	call getin
+
+	; call flush_cin
 
 	; Check to see if the first character is a 'v'
 	movzx r8, byte [userin]
@@ -104,7 +114,7 @@ _start:
 	puts_newline
 	%endrep
 
-	putsl msg_tysm
+	putsl msg_tayasmfatpamg
 
 	; End the program
 	mov rax, sys_exit              ; sys_exit
@@ -129,8 +139,8 @@ pusherr:
 	ret
 
 getin:
-	mov rdi, std_io
 	mov rax, sys_read
+	mov rdi, std_io
 	syscall
 	ret
 
@@ -140,17 +150,21 @@ strlen: ; Input string is in rsi, return value is in rax
 	mov rax, 0  ; Clear rax
 	mov r14, rsi ; Load the string address into r14 
 
-strlen__loop:
-	; Add to the string length
+	jmp strlen__loop
+
+strlen__loop_one:
 	add rax, 1
 
+strlen__loop:
 	; Load the next character into r15
-	add r14, 1 ; size of a character
-	movzx r15, byte [r14]
+	movzx r15, byte [r14+rax]
 
 	cmp r15, 0x00 ; Check r15 with the null character
-	jne strlen__loop ; Jump back to there if it's not a zero
+	jne strlen__loop_one ; Jump back to there if it's not a zero
 
 	pop r14, r15
 
+	ret
+
+flush_cin:
 	ret
