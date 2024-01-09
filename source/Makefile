@@ -14,3 +14,6 @@ clean:
 debug:
 	@./shmakefile.sh
 	@gdb ./a.out
+
+reqs:
+	sudo pacman -S nasm
